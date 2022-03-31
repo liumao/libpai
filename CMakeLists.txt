@@ -11,11 +11,14 @@ set(CMAKE_MACOSX_RPATH 1)
 # ignore sh.exe error
 set(CMAKE_SH CMAKE_SH-NOTFOUND)
 
+# include path
+include_directories(./ /usr/include /usr/local/include)
+
 # Link and Set Output Path
 link_directories(${PROJECT_SOURCE_DIR})
 
 # Generate execute
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} main.cpp led.cpp script.cpp)
 
 # Link Libraries
-target_link_libraries(${PROJECT_NAME} wiringPi)
+target_link_libraries(${PROJECT_NAME} wiringPi pthread)
