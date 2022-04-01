@@ -28,30 +28,30 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <pai.h>
 
 class Led {
-	private:
-		/// \brief pin no
-		int m_nPinNo;
+private:
+	/// \brief pin no
+	int m_nPinNo;
 
-	public:
-		/// \brief constructor
-		Led(int nPinNo);
-		
-		/// \brief destructor
-		virtual ~Led();
-		
-		/// \brief turn on led
-		/// 
-		/// \param [in] nKeepMsec turn on led for times
-		///
-		/// \return 
-		void turnOn(int nKeepMsec);
-		
-		/// \brief turn off led
-		/// 
-		/// \param [in] nKeepMsec turn on led for times
-		///
-		/// \return 
-		void turnOff(int nKeepMsec);
+public:
+	/// \brief constructor
+	Led(int nPinNo);
+	
+	/// \brief destructor
+	virtual ~Led();
+	
+	/// \brief turn on led
+	/// 
+	/// \param [in] nKeepMsec turn on led for times
+	///
+	/// \return 
+	void turnOn(int nKeepMsec);
+	
+	/// \brief turn off led
+	/// 
+	/// \param [in] nKeepMsec turn on led for times
+	///
+	/// \return 
+	void turnOff(int nKeepMsec);
 };
 
 #endif //__PAI_LED_H__
