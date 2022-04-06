@@ -23,11 +23,54 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __PAI_H__
 #define __PAI_H__
 
-/// \brief headers
+/// \brief ffmpeg header
+extern "C" {
+#include <libavdevice/avdevice.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
+#include <libavutil/pixfmt.h>
+#include <libavutil/imgutils.h>
+#include <libavcodec/avcodec.h>
+#include <libswresample/swresample.h>
+#include <libavutil/audio_fifo.h>
+}
+
+/// \brief common headers
 #include <wiringPi.h>
 #include <iostream>
 #include <thread>
 #include <cstring>
+#include <functional>
+#include <vector>
+#include <map>
+#include <chrono>
 using namespace std;
+
+/// \brief device type
+#if defined (WIN32)
+#define DEVICE_NAME "dshow"
+#elif defined(__linux__) || defined(__arm__)
+#define DEVICE_NAME "video4linux2"
+#elif defined(__APPLE__) && defined(__GNUC__)
+#define DEVICE_NAME "avfoundation"
+#endif
+
+/// \brief define params map
+typedef const map<string, string> ParamsMap;
+
+/// \brief dlib header
+#include <dlib/image_processing/frontal_face_detector.h>
+#include <dlib/image_io.h>
+#include <dlib/image_processing.h>
+#include <dlib/opencv.h>
+using namespace dlib;
+
+/// \brief opencv
+#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+using namespace cv;
+
+/// \brief callback
+typedef function<void(Mat &)> AVCallBack;
 
 #endif //__PAI_H__

@@ -7,21 +7,21 @@ Led::Led(int nPinNo)
 }
 
 Led::~Led() {
-	/// turn off led
-	/// no delay
+	// turn off led
+	// no delay
 	turnOff(0);
 }
 
 void Led::turnOn(int nKeepMsec) {
-	/// turn on led
+	// turn on led
     digitalWrite(m_nPinNo, HIGH);
-    /// sleep for next step
+    // sleep for next step
     delay(nKeepMsec);
 }
 
 void Led::turnOff(int nKeepMsec) {
-	/// turn off led
+	// turn off led
     digitalWrite(m_nPinNo, LOW);
-    /// sleep for next step
+    // sleep for next step
     delay(nKeepMsec);
 }
