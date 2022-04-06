@@ -47,7 +47,12 @@ int main(int argc, char* argv[]) {
 	}
 	
 	// init dlib
+	// dectect objetc
 	auto detector = get_frontal_face_detector();
+	
+	// shape predictor
+	shape_predictor sp;
+	deserialize("shape_predictor_68_face_landmarks.dat") >> sp;
 	
 	// timestamp
 	auto lastTime = chrono::system_clock::now().time_since_epoch();
@@ -72,8 +77,14 @@ int main(int argc, char* argv[]) {
 		// face vector
 		std::vector<dlib::rectangle> dets = detector(img);
 		
-		// log
-		cout << "Number of faces detected: " << dets.size() << endl;
+		// each face 68 feature point
+		std::vector<dlib::full_object_detection> shapes;
+		for (unsigned long i = 0; i < dets.size(); ++i) {
+			shapes.push_back(sp(img, dets[i])); 
+		}
+		
+		// log number
+		cout << "Number of faces detected: " << dets.size() << ", Number of faces 68 feature point: " << shapes.size() << endl;
 	});
 
 	// init video

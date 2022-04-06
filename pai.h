@@ -63,6 +63,9 @@ typedef const map<string, string> ParamsMap;
 #include <dlib/image_io.h>
 #include <dlib/image_processing.h>
 #include <dlib/opencv.h>
+#include <dlib/dnn.h>
+#include <dlib/clustering.h>
+#include <dlib/string.h>
 using namespace dlib;
 
 /// \brief opencv
