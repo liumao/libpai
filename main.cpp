@@ -1,9 +1,18 @@
 #include <led.h>
 #include <script.h>
 #include <video.h>
+#include <wheel.h>
 
 /// \brief define pin
-#define LED_PIN_1 1
+#define LED_PIN_1 29
+
+/// \brief define left wheel pin
+#define LEFT_WHEEL_1 0
+#define LEFT_WHEEL_2 1
+
+/// \brief define right wheel pin
+#define RIGHT_WHEEL_1 2
+#define RIGHT_WHEEL_2 4
 
 int main(int argc, char* argv[]) {
 	// init wiringpi 
@@ -14,6 +23,10 @@ int main(int argc, char* argv[]) {
 
 	// init led module
 	Led led(LED_PIN_1);
+	
+	// init wheels
+	Wheel leftWheel(LEFT_WHEEL_1, LEFT_WHEEL_2);	
+	Wheel rightWheel(RIGHT_WHEEL_1, RIGHT_WHEEL_2);
 	
 	// led thread
 	thread t([&]{
@@ -30,6 +43,20 @@ int main(int argc, char* argv[]) {
 			/// read temp
 			int nTemp = atoi(cmd.executeCMD("cat /sys/class/thermal/thermal_zone0/temp"));
 			cout << "cpu temp: " << nTemp / 1000 << endl;
+			
+			// forward
+			leftWheel.forward(100, 0);	
+			rightWheel.forward(100, 0);	
+			delay(1000);
+			
+			// back
+			leftWheel.back(100, 0);
+			rightWheel.back(100, 0);
+			delay(1000);
+			
+			// pause
+			leftWheel.pause();
+			rightWheel.pause();
 		}
 	});
 	t.detach();
