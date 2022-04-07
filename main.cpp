@@ -1,7 +1,13 @@
+#if defined(LED_TEST)
 #include <led.h>
+#endif
 #include <script.h>
-#include <video.h>
+#if defined(WHEEL_TEST)
 #include <wheel.h>
+#endif
+#if defined(FACE_RECO_TEST)
+#include <face_reco.h>
+#endif
 
 /// \brief define pin
 #define LED_PIN_1 29
@@ -21,12 +27,30 @@ int main(int argc, char* argv[]) {
 	// run flags
 	bool bRun = true;
 
+#if defined(LED_TEST)
 	// init led module
 	Led led(LED_PIN_1);
+#endif
 	
+#if defined(WHEEL_TEST)
 	// init wheels
 	Wheel leftWheel(LEFT_WHEEL_1, LEFT_WHEEL_2);	
 	Wheel rightWheel(RIGHT_WHEEL_1, RIGHT_WHEEL_2);
+#endif
+	
+#if defined(FACE_RECO_TEST)
+	// init face reco
+	FaceReco faceReco("shape_predictor_68_face_landmarks.dat");
+	
+	// init video
+	if (!faceReco.start("/dev/video0", {
+			{"video_size", "320x240"},
+			{"framerate", "30"},
+			{"b", "360000"}
+		})) {
+		cout << "video init fail" << endl;
+	}
+#endif
 	
 	// led thread
 	thread t([&]{
@@ -35,95 +59,37 @@ int main(int argc, char* argv[]) {
 		
 		// loop
 		while (bRun) {
+#if defined(LED_TEST)
 			// turn on led
 			led.turnOn(500);
 			// turn off led
 			led.turnOff(500);
+#endif
 			
 			/// read temp
 			int nTemp = atoi(cmd.executeCMD("cat /sys/class/thermal/thermal_zone0/temp"));
 			cout << "cpu temp: " << nTemp / 1000 << endl;
 			
+#if defined(WHEEL_TEST)
 			// forward
 			leftWheel.forward(100, 0);	
-			rightWheel.forward(100, 0);	
-			delay(1000);
+			rightWheel.back(100, 0);
+			delay(3000);
 			
 			// back
 			leftWheel.back(100, 0);
-			rightWheel.back(100, 0);
-			delay(1000);
+			rightWheel.forward(100, 0);	
+			delay(3000);
 			
 			// pause
 			leftWheel.pause();
 			rightWheel.pause();
+#endif
+			// delay
+			delay(1000);
 		}
 	});
 	t.detach();
-	
-	// ffmpeg register
-	avcodec_register_all();
-    avdevice_register_all();
-	
-	// open device
-	auto pInFormat = av_find_input_format(DEVICE_NAME);
-	if (!pInFormat) {		
-		// log
-		cout << "av_find_input_format " << DEVICE_NAME << " error" << endl;
-		return 1;
-	}
-	
-	// init dlib
-	// dectect objetc
-	auto detector = get_frontal_face_detector();
-	
-	// shape predictor
-	shape_predictor sp;
-	deserialize("shape_predictor_68_face_landmarks.dat") >> sp;
-	
-	// timestamp
-	auto lastTime = chrono::system_clock::now().time_since_epoch();
-	
-	// video 
-	Video video(pInFormat, [&](Mat &mat) {
-		// check time stamp
-		auto now = chrono::system_clock::now().time_since_epoch();
-		if (now.count() - lastTime.count() < 1000000000) {
-			return;
-		}
-		lastTime = now;
-		
-		// image 
-		array2d<unsigned char> img;
-		
-		// gray mat
-		Mat gray;
-		cvtColor(mat, gray, COLOR_RGB2GRAY);
-		dlib::assign_image(img, dlib::cv_image<unsigned char>(gray));
-		
-		// face vector
-		std::vector<dlib::rectangle> dets = detector(img);
-		
-		// each face 68 feature point
-		std::vector<dlib::full_object_detection> shapes;
-		for (unsigned long i = 0; i < dets.size(); ++i) {
-			shapes.push_back(sp(img, dets[i])); 
-		}
-		
-		// log number
-		cout << "Number of faces detected: " << dets.size() << ", Number of faces 68 feature point: " << shapes.size() << endl;
-	});
-
-	// init video
-	if (!video.init("/dev/video0", {
-			{"video_size", "320x240"},
-			{"framerate", "30"},
-			{"b", "360000"}
-		})) {
-		cout << "video init fail" << endl;
-	} else {
-		video.start();
-	}
 	
 	// wait input
 	char input;
@@ -131,11 +97,21 @@ int main(int argc, char* argv[]) {
 		if (input == 'q') {
 			bRun = false;
 			
+#if defined(LED_TEST)
 			// turn off led
 			led.turnOff(500);
+#endif
 			
-			// stop video
-			video.stop();
+#if defined(WHEEL_TEST)
+			// pause
+			leftWheel.pause();
+			rightWheel.pause();
+#endif
+
+#if defined(FACE_RECO_TEST)
+			// stop face reco
+			faceReco.stop();
+#endif
 			break;
 		}
 		
