@@ -13,70 +13,59 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-/// \file face_reco.h
-/// \brief face recognition header
+/// \file audio_reco.h
+/// \brief audio reco header
 ///
-/// Face recognition
+/// Capture audio reco from device.
 ///
 /// \author liumao
 /// \version v1.0
-/// \date 7 May 2022
- 
-#ifndef __PAI_FACE_RECO_H__
-#define __PAI_FACE_RECO_H__
+/// \date 3 May 2022
+
+#ifndef __PAI_AUDIO_RECO_H__
+#define __PAI_AUDIO_RECO_H__
 
 #include <pai.h>
-#include <video.h>
+#include <audio.h>
 
-/// \brief line size
-#define CV_LINE_SIZE 1
+/// \brief recognition buf max size
+#define RECO_BUF_MAX_SIZE 51200
+/// \brief recognition size
+#define RECO_SIZE 512
 
-class FaceReco {
+class AudioReco {
 private:
-	/// \brief last time stamp
-	time_t m_tLstTime;
-	
 	/// \brief av input format
     AVInputFormat *m_pInFormat;
 	
-	/// \brief video
-	Video *m_pVideo;
+	/// \brief audio
+	Audio *m_pAudio;
 	
-	/// \brief frontal face detector
-	frontal_face_detector m_pFaceDetector;
+	/// \brief audio buffer size
+	int m_nAudSize;
 	
-	/// \brief shape predictor
-	shape_predictor m_pShapePredictor;
+	/// \brief audio buffer
+	char m_cAudBuffer[RECO_BUF_MAX_SIZE];
 	
-	/// \brief shape location callback
-	LocCallBack m_pLocCB;
+	/// \brief run
+	bool m_bRun;
 	
-	/// \brief cv line size
-	int m_cvLinesizes[CV_LINE_SIZE];
-	
-	/// \brief opencv mat
-	Mat m_cvImage;
-	
-	/// \brief image context
-    struct SwsContext *m_pImgSwsCTX;
-	
-	/// \brief av frame
-	AVFrame *m_pFrame;
+	/// \brief audio cmd callback
+	CmdCallBack m_pCmdCB;
 	
 public:
 	/// \brief constructor
 	///
 	/// \param [in] pInFormat av input format
-	/// \param [in] strSPLandMark shape predictor land mark
-	/// \param [in] pLocCB shape location callback
-	FaceReco(AVInputFormat *pInFormat, const string& strSPLandMark, const LocCallBack pLocCB);
+	/// \param [in] pCmdCB audio cmd callback
+	AudioReco(AVInputFormat *pInFormat, const CmdCallBack pCmdCB);
 	
 	/// \brief destructor
-	virtual ~FaceReco();
+	virtual ~AudioReco();
 	
-	/// \brief start face recognition
+	/// \brief start audio recognition
 	///
-	/// \param [in] name video name
+	/// \param [in] name audio name
 	/// \param [in] params params
 	///
 	/// \return true/false
@@ -86,11 +75,14 @@ public:
 	void stop();
 	
 private:
-	/// \brief process video packet
+	/// \brief process audio packet
 	///
-	/// \param [in] packet video packet
+	/// \param [in] packet audio packet
 	void processFrame(AVPacket *packet);
-
+	
+	/// \brief audio recognition
+	void audioReco();
+	
 };
 
-#endif //__PAI_FACE_RECO_H__
+#endif //__PAI_AUDIO_RECO_H__

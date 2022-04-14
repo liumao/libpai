@@ -1,6 +1,6 @@
-#include <video.h>
+#include <audio.h>
 
-Video::Video(AVInputFormat *pAVInput, AVCallBack pCB)
+Audio::Audio(AVInputFormat *pAVInput, AVCallBack pCB)
 	: m_pInput(pAVInput),
 	m_pCTX(nullptr),
 	m_pAVCB(pCB),
@@ -12,7 +12,7 @@ Video::Video(AVInputFormat *pAVInput, AVCallBack pCB)
     av_init_packet(m_pPacket);
 }
 
-Video::~Video() {
+Audio::~Audio() {
 	// stop
 	stop();
 	
@@ -23,7 +23,7 @@ Video::~Video() {
 	av_packet_free(&m_pPacket);
 }
 
-bool Video::init(const string &name, const ParamsMap &params) {
+bool Audio::init(const string &name, const ParamsMap &params) {
 	// check device name 
 	if(name.empty()) {
 		return false;
@@ -48,32 +48,21 @@ bool Video::init(const string &name, const ParamsMap &params) {
     }
 	
 	// get index
-    m_nIndex = av_find_best_stream(m_pCTX, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+    m_nIndex = av_find_best_stream(m_pCTX, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
 	// get decoder
     auto pDeCodecCTX = m_pCTX->streams[m_nIndex]->codec;
     auto pCurCodec = avcodec_find_decoder(pDeCodecCTX->codec_id);
-	
-	// decoder delay
-    av_opt_set(pDeCodecCTX->priv_data, "preset", "slow", 0);
-    av_opt_set(pDeCodecCTX->priv_data, "tune", "zerolatency", 0);
-    av_opt_set(pDeCodecCTX->priv_data, "profile", "baseline", 0);
 
     // open decoder
     if (avcodec_open2(pDeCodecCTX, pCurCodec, nullptr) < 0) {
         return false;
     }
 	
-	// check pix format
-	if (pDeCodecCTX->pix_fmt == AV_PIX_FMT_NONE) {		
-		// set pix format
-		pDeCodecCTX->pix_fmt = AV_PIX_FMT_YUV420P;
-	}
-	
 	// return result
 	return true;
 }
 
-void Video::start() {
+void Audio::start() {
 	// set run flag
 	m_bRun = true;
 	
@@ -88,16 +77,16 @@ void Video::start() {
 	t.detach();
 }
 
-void Video::stop() {
+void Audio::stop() {
 	// clear run flag
 	m_bRun = false;
 }
 
-AVCodecContext* Video::getDecoder() const {
+AVCodecContext* Audio::getDecoder() const {
 	return m_pCTX->streams[m_nIndex]->codec;
 }
 
-bool Video::captureFrame() {
+bool Audio::captureFrame() {
 	// reset packet
 	m_pPacket->data = nullptr;
 	m_pPacket->size = 0;
@@ -109,7 +98,7 @@ bool Video::captureFrame() {
 		return false;
 	}
 
-	// process video stream only
+	// process audio stream only
 	if (m_pPacket->stream_index != m_nIndex) {
 		// release ref
 		av_packet_unref(m_pPacket);

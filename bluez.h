@@ -13,76 +13,71 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-/// \file video.h
-/// \brief video header
+/// \file bluez.h
+/// \brief bluez header
 ///
-/// Capture video from device.
+/// Control bluetooth
 ///
 /// \author liumao
 /// \version v1.0
-/// \date 1 Apr 2022
-
-#ifndef __PAI_VIDEO_H__
-#define __PAI_VIDEO_H__
+/// \date 8 May 2022
+ 
+#ifndef __PAI_BLUEZ_H__
+#define __PAI_BLUEZ_H__
 
 #include <pai.h>
 
-class Video {
+/// \brief device size
+#define DEVICE_SIZE 8
+/// \brief max response
+#define RES_MAX_SIZE 255
+
+/// \brief name size
+#define NAME_SIZE 248
+/// \brief mac size
+#define MAC_SIZE 19
+
+/// \brief node info
+typedef struct tagNodeInfo {
+	/// \brief device's mac
+	char m_cMac[MAC_SIZE];
+	
+	/// \brief device's name
+	char m_cName[NAME_SIZE];
+}TNodeInfo, *PNodeInfo;
+
+class BlueZ {
 private:
-	/// \brief av input format
-	AVInputFormat *m_pInput;
+	/// \brief device id
+	int m_nDeviceId;
 	
-	/// \brief context
-    AVFormatContext *m_pCTX;
+	/// \brief inquiry info
+	inquiry_info *m_pInquiryInfo;
 	
-	/// \brief callback
-    AVCallBack m_pAVCB;
-	
-	/// \brief start flag
-    bool m_bRun;
-	
-    /// \brief index
-    int m_nIndex;
-	
-	/// \brief av packet
-	AVPacket *m_pPacket;
+	/// \brief sock
+	int m_nSock;
 	
 public:
 	/// \brief constructor
-	Video(AVInputFormat *pAVInput, AVCallBack pCB);
+	BlueZ();
 	
 	/// \brief destructor
-	virtual ~Video();
+	virtual ~BlueZ();
 	
-	/// \brief init
+	/// \brief scan
 	///
-	/// \param [in] name device name
-	/// \param [in] params params
-	///
-	/// \return true/false
-	bool init(const string &name, const ParamsMap &params);
-	
-	/// \brief start
+	/// \param [in] vDevices available devices
 	///
 	/// \return 
-	void start();
+	void scan(vector<TNodeInfo> &vDevices);
 	
-	/// \brief stop
+	/// \brief pair
 	///
-	/// \return 
-	void stop();
-	
-	/// \brief get decoder
-	///
-	/// \return codec
-	AVCodecContext* getDecoder() const;
-	
-private:
-	/// \brief capture frame
+	/// \param [in] device_name device name
 	///
 	/// \return true/false
-	bool captureFrame();
-	
+	bool pair(const string& strDeviceName);
+
 };
 
-#endif //__PAI_VIDEO_H__
+#endif //__PAI_BLUEZ_H__

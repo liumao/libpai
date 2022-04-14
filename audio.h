@@ -13,21 +13,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-/// \file video.h
-/// \brief video header
+/// \file audio.h
+/// \brief audio header
 ///
-/// Capture video from device.
+/// Capture audio from device.
 ///
 /// \author liumao
 /// \version v1.0
-/// \date 1 Apr 2022
+/// \date 3 May 2022
 
-#ifndef __PAI_VIDEO_H__
-#define __PAI_VIDEO_H__
+#ifndef __PAI_AUDIO_H__
+#define __PAI_AUDIO_H__
 
 #include <pai.h>
 
-class Video {
+class Audio {
 private:
 	/// \brief av input format
 	AVInputFormat *m_pInput;
@@ -49,10 +49,10 @@ private:
 	
 public:
 	/// \brief constructor
-	Video(AVInputFormat *pAVInput, AVCallBack pCB);
+	Audio(AVInputFormat *pAVInput, AVCallBack pCB);
 	
 	/// \brief destructor
-	virtual ~Video();
+	virtual ~Audio();
 	
 	/// \brief init
 	///
@@ -85,4 +85,4 @@ private:
 	
 };
 
-#endif //__PAI_VIDEO_H__
+#endif  //__PAI_AUDIO_H__

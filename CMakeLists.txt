@@ -12,7 +12,12 @@ set(CMAKE_MACOSX_RPATH 1)
 set(CMAKE_SH CMAKE_SH-NOTFOUND)
 
 # include path
-include_directories(./ /usr/include /usr/local/include)
+include_directories(./ 
+					/usr/include 
+					/usr/local/include 
+					/usr/include/glib-2.0
+					/usr/include/pocketsphinx
+					/usr/lib/arm-linux-gnueabihf/glib-2.0/include)
 
 # Link and Set Output Path
 link_directories(${PROJECT_SOURCE_DIR})
@@ -21,7 +26,7 @@ link_directories(${PROJECT_SOURCE_DIR})
 set(src_files main.cpp script.cpp)
 
 # Lib Files
-set(lib_files wiringPi pthread)
+set(lib_files wiringPi pthread glib-2.0 gio-2.0)
 
 # check led
 option(LED_TEST "This is a default option for LED_TEST" OFF)
@@ -65,6 +70,40 @@ if (${FACE_RECO_TEST} STREQUAL "ON")
 	
 	# add lib file
 	set(lib_files ${lib_files} dlib png avcodec avdevice avformat swscale avutil opencv_core opencv_imgproc)
+endif()
+
+# check audio reco
+option(AUDIO_RECO_TEST "This is a default option for AUDIO_RECO_TEST" OFF)
+if (${AUDIO_RECO_TEST} STREQUAL "ON")
+	# message
+	message(STATUS "audio reco enable")
+	
+	# add defined
+	add_definitions(-DAUDIO_RECO_TEST)
+	# ffmpeg defined
+	add_definitions(-D__STDC_CONSTANT_MACROS)
+	
+	# add src file
+	set(src_files ${src_files} audio.cpp audio_reco.cpp)
+	
+	# add lib file
+	set(lib_files ${lib_files} avcodec avdevice avformat avutil pocketsphinx sphinxbase sphinxad)
+endif()
+
+# check bluez
+option(BLUEZ_TEST "This is a default option for BLUEZ_TEST" OFF)
+if (${BLUEZ_TEST} STREQUAL "ON")
+	# message
+	message(STATUS "bluez enable")
+	
+	# add defined
+	add_definitions(-DBLUEZ_TEST)
+	
+	# add src file
+	set(src_files ${src_files} bluez.cpp)
+	
+	# add lib file
+	set(lib_files ${lib_files} bluetooth)
 endif()
 
 # Generate execute
