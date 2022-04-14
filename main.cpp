@@ -119,7 +119,26 @@ int main(int argc, char* argv[]) {
 #if defined(AUDIO_RECO_TEST)
 	// init audio reco
 	AudioReco audioReco(pAudInFormat, [&](const char *cmd) {
-		cout << "cmd " << cmd << endl;
+		cout << "=========cmd " << cmd << endl;
+		
+		// check cmd
+		if (!strcmp(cmd, "forward")) {
+#if defined(WHEEL_TEST)
+			wheel.forward(0, 1000);
+#endif
+		} else if (!strcmp(cmd, "back")) {
+#if defined(WHEEL_TEST)
+			wheel.back(0, 1000);
+#endif			
+		} else if (!strcmp(cmd, "left")) {
+#if defined(WHEEL_TEST)
+			wheel.left(0, 1000);
+#endif			
+		} else if (!strcmp(cmd, "right")) {
+#if defined(WHEEL_TEST)
+			wheel.right(0, 1000);
+#endif			
+		}
 	});
 	
 	// init audio
