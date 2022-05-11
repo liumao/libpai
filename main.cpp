@@ -161,9 +161,14 @@ int main(int argc, char* argv[]) {
 
 #if defined(DBUS_TEST)
 	// init dbus monitor
-	DBusMonitor dbusMonitor;
-	dbusMonitor.addMonitorMethod("type='signal',interface='org.share.linux'");
-	dbusMonitor.start();
+	DBusMonitor helloSDBus("hello.world.service");
+	helloSDBus.init();
+	helloSDBus.addMonitorMethod("type='signal',interface='aa.bb.cc'");
+	helloSDBus.start();
+	
+	DBusMonitor clientCDBus("hello.world.client");
+	clientCDBus.init();
+	clientCDBus.sendSignal("hello world", "/hello", "aa.bb.cc", "alarm_test");
 #endif
 	
 	// wait input

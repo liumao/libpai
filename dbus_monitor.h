@@ -38,12 +38,22 @@ private:
 	/// \brief run flag
 	bool m_bRun;
 	
+	/// \brief request name
+	string m_strRequestName;
+	
 public:
 	/// \brief constructor
-	DBusMonitor();
+	///
+	/// \param [in] strRequestName request name
+	DBusMonitor(string strRequestName);
 	
 	/// \brief destructor
 	virtual ~DBusMonitor();
+	
+	/// \brief int
+	///
+	/// \return true/false
+	bool init();
 	
 	/// \brief add monitor method
 	///
@@ -51,6 +61,19 @@ public:
 	///
 	/// \return true/false
 	bool addMonitorMethod(const string& strMethod);
+	
+	/// \brief send signal
+	///
+	/// \param [in] pData data
+	/// \param [in] strPath path
+	/// \param [in] strInterFaceName interface name
+	/// \param [in] strSignalName signal name
+	///
+	/// \return true/false
+	bool sendSignal(const char* pData, 
+					const string& strPath, 
+					const string& strInterFaceName, 
+					const string& strSignalName);
 	
 	/// \brief start monitor
 	///
