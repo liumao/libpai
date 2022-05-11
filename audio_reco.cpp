@@ -115,9 +115,9 @@ void AudioReco::audioReco() {
 		m_pCmdCB(pRet);
 	}
 	
-	// reset audio size
-	m_nAudSize = 0;
-	
 	// release pocketsphinx decoder
 	ps_free(pPsDecoder);
+	
+	// reset audio size
+	m_nAudSize = 0;
 }

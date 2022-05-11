@@ -14,6 +14,9 @@
 #if defined(BLUEZ_TEST)
 #include <bluez.h>
 #endif
+#if defined(DBUS_TEST)
+#include <dbus_monitor.h>
+#endif
 
 /// \brief define pin
 #define LED_PIN_1 29
@@ -132,11 +135,11 @@ int main(int argc, char* argv[]) {
 #endif			
 		} else if (!strcmp(cmd, "left")) {
 #if defined(WHEEL_TEST)
-			wheel.left(0, 1000);
+			wheel.left(0, 500);
 #endif			
 		} else if (!strcmp(cmd, "right")) {
 #if defined(WHEEL_TEST)
-			wheel.right(0, 1000);
+			wheel.right(0, 500);
 #endif			
 		}
 	});
@@ -155,11 +158,18 @@ int main(int argc, char* argv[]) {
 	// init bluez
 	BlueZ blueZ;
 #endif
+
+#if defined(DBUS_TEST)
+	// init dbus monitor
+	DBusMonitor dbusMonitor;
+	dbusMonitor.addMonitorMethod("type='signal',interface='org.share.linux'");
+	dbusMonitor.start();
+#endif
 	
 	// wait input
 	char input;
 	while(cin >> input) {
-		if (input == 'q') {			
+		if (input == 'q') {		
 #if defined(LED_TEST)
 			// turn off led
 			led.turnOff(0);
@@ -183,7 +193,7 @@ int main(int argc, char* argv[]) {
 		} else if(input == 's') {
 #if defined(BLUEZ_TEST)
 			// scan
-			vector<TNodeInfo> vNodes;
+			std::vector<TNodeInfo> vNodes;
 			blueZ.scan(vNodes);
 			
 			// log

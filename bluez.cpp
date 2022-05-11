@@ -29,7 +29,7 @@ BlueZ::~BlueZ() {
 	}
 }
 
-void BlueZ::scan(vector<TNodeInfo> &vDevices) {
+void BlueZ::scan(std::vector<TNodeInfo> &vDevices) {
 	// inquiry
 	auto nSize = hci_inquiry(m_nDeviceId, DEVICE_SIZE, RES_MAX_SIZE, nullptr, &m_pInquiryInfo, IREQ_CACHE_FLUSH);
 	

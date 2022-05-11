@@ -17,6 +17,8 @@ include_directories(./
 					/usr/local/include 
 					/usr/include/glib-2.0
 					/usr/include/pocketsphinx
+					/usr/include/dbus-1.0
+					/usr/lib/arm-linux-gnueabihf/dbus-1.0/include
 					/usr/lib/arm-linux-gnueabihf/glib-2.0/include)
 
 # Link and Set Output Path
@@ -104,6 +106,22 @@ if (${BLUEZ_TEST} STREQUAL "ON")
 	
 	# add lib file
 	set(lib_files ${lib_files} bluetooth)
+endif()
+
+# check dbus monitor
+option(DBUS_TEST "This is a default option for DBUS_TEST" OFF)
+if (${DBUS_TEST} STREQUAL "ON")
+	# message
+	message(STATUS "dbus enable")
+	
+	# add defined
+	add_definitions(-DDBUS_TEST)
+	
+	# add src file
+	set(src_files ${src_files} dbus_monitor.cpp)
+	
+	# add lib file
+	set(lib_files ${lib_files} dbus-1)
 endif()
 
 # Generate execute

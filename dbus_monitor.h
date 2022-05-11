@@ -13,57 +13,55 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-/// \file bluez.h
-/// \brief bluez header
+/// \file dbus_monitor.h
+/// \brief dbus monitor header
 ///
-/// Control bluetooth
+/// Monitor dbus message
 ///
 /// \author liumao
 /// \version v1.0
-/// \date 8 May 2022
- 
-#ifndef __PAI_BLUEZ_H__
-#define __PAI_BLUEZ_H__
+/// \date 15 May 2022
+
+#ifndef __PAI_DBUS_MONITOR_H__
+#define __PAI_DBUS_MONITOR_H__
 
 #include <pai.h>
 
-/// \brief device size
-#define DEVICE_SIZE 8
-/// \brief max response
-#define RES_MAX_SIZE 255
-
-class BlueZ {
+class DBusMonitor {
 private:
-	/// \brief device id
-	int m_nDeviceId;
+	/// \brief dbus error
+	DBusError m_tDBusError;
 	
-	/// \brief inquiry info
-	inquiry_info *m_pInquiryInfo;
-	
-	/// \brief sock
-	int m_nSock;
+	/// \brief con
+	DBusConnection *m_pCon;
+
+	/// \brief run flag
+	bool m_bRun;
 	
 public:
 	/// \brief constructor
-	BlueZ();
+	DBusMonitor();
 	
 	/// \brief destructor
-	virtual ~BlueZ();
+	virtual ~DBusMonitor();
 	
-	/// \brief scan
+	/// \brief add monitor method
 	///
-	/// \param [in] vDevices available devices
-	///
-	/// \return 
-	void scan(std::vector<TNodeInfo> &vDevices);
-	
-	/// \brief pair
-	///
-	/// \param [in] device_name device name
+	/// \param [in] strMethod method
 	///
 	/// \return true/false
-	bool pair(const string& strDeviceName);
-
+	bool addMonitorMethod(const string& strMethod);
+	
+	/// \brief start monitor
+	///
+	/// \return
+	void start();
+	
+	/// \brief stop monitor
+	///
+	/// \return
+	void stop();
+	
 };
 
-#endif //__PAI_BLUEZ_H__
+#endif  //__PAI_DBUS_MONITOR_H__

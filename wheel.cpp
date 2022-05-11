@@ -125,13 +125,13 @@ void Wheel::process() {
 		// log
 		cout << "left" << endl;
 		// set pin0 low	
-		digitalWrite(m_nPin0, LOW);	
+		digitalWrite(m_nPin0, HIGH);	
 		// set pin1 high
-		digitalWrite(m_nPin1, HIGH);
+		digitalWrite(m_nPin1, LOW);
 		// set pin2 low	
-		digitalWrite(m_nPin2, HIGH);	
+		digitalWrite(m_nPin2, LOW);	
 		// set pin3 high
-		digitalWrite(m_nPin3, LOW);
+		digitalWrite(m_nPin3, HIGH);
 		// sleep for next step
 		delay(m_nKeepMsec);
 		// stop
@@ -142,13 +142,13 @@ void Wheel::process() {
 		// log
 		cout << "right" << endl;
 		// set pin0 low	
-		digitalWrite(m_nPin0, HIGH);	
+		digitalWrite(m_nPin0, LOW);	
 		// set pin1 high
-		digitalWrite(m_nPin1, LOW);
+		digitalWrite(m_nPin1, HIGH);
 		// set pin2 low	
-		digitalWrite(m_nPin2, LOW);	
+		digitalWrite(m_nPin2, HIGH);	
 		// set pin3 high
-		digitalWrite(m_nPin3, HIGH);
+		digitalWrite(m_nPin3, LOW);
 		// sleep for next step
 		delay(m_nKeepMsec);
 		// stop

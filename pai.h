@@ -111,6 +111,27 @@ typedef function<void(TFaceLoc &)> LocCallBack;
 typedef function<void(const char *)> CmdCallBack;
 #endif
 
+#if defined(BLUEZ_TEST)
+/// \brief name size
+#define NAME_SIZE 248
+/// \brief mac size
+#define MAC_SIZE 19
+
+/// \brief node info
+typedef struct tagNodeInfo {
+	/// \brief device's mac
+	char m_cMac[MAC_SIZE];
+	
+	/// \brief device's name
+	char m_cName[NAME_SIZE];
+}TNodeInfo, *PNodeInfo;
+#endif
+
+#if defined(DBUS_TEST)
+/// \brief dbus header
+#include <dbus/dbus.h>
+#endif
+
 /// \brief get current time stamp
 ///
 /// \return current time stamp
