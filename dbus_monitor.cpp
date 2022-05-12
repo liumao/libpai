@@ -83,8 +83,8 @@ void DBusMonitor::start() {
 	thread t([&](){		
 		// loop
 		while(m_bRun) {
-			if (dbus_connection_read_write_dispatch(m_pCon, 1000)) {
-				auto msg = dbus_connection_borrow_message(m_pCon);
+			if (dbus_connection_read_write(m_pCon, 1000)) {
+				auto msg = dbus_connection_pop_message(m_pCon);
 				if (!msg) {
 					continue;
 				}
@@ -96,8 +96,8 @@ void DBusMonitor::start() {
 				cout << dbus_message_get_path(msg) << endl;
 				cout << "----------------------------" << endl;
 				
-				// return message
-				dbus_connection_return_message(m_pCon, msg);
+				// free the message
+				dbus_message_unref(msg);
 			}
 		}
 	});
@@ -107,14 +107,4 @@ void DBusMonitor::start() {
 void DBusMonitor::stop() {
 	// set run
 	m_bRun = false;
-	
-	// release
-	if (m_pCon) {
-		// close
-		dbus_connection_close(m_pCon);
-		
-		// free
-		free(m_pCon);
-		m_pCon = nullptr;
-	}
 }

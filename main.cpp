@@ -163,12 +163,12 @@ int main(int argc, char* argv[]) {
 	// init dbus monitor
 	DBusMonitor helloSDBus("hello.world.service");
 	helloSDBus.init();
-	helloSDBus.addMonitorMethod("type='signal',interface='aa.bb.cc'");
+	helloSDBus.addMonitorMethod("type='signal',interface='hello.world.client'");
 	helloSDBus.start();
 	
 	DBusMonitor clientCDBus("hello.world.client");
 	clientCDBus.init();
-	clientCDBus.sendSignal("hello world", "/hello", "aa.bb.cc", "alarm_test");
+	clientCDBus.sendSignal("hello world", "/hello/world/client", "hello.world.client", "hello");
 #endif
 	
 	// wait input

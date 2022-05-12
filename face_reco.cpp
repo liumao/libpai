@@ -13,7 +13,7 @@ FaceReco::FaceReco(AVInputFormat *pInFormat, const string& strSPLandMark, const 
 	m_pFaceDetector = get_frontal_face_detector();
 	
 	// init shaped predictor
-	deserialize("shape_predictor_68_face_landmarks.dat") >> m_pShapePredictor;
+	deserialize(strSPLandMark.c_str()) >> m_pShapePredictor;
 }
 
 FaceReco::~FaceReco() {
@@ -26,7 +26,7 @@ FaceReco::~FaceReco() {
 	
 	// release sws 
 	sws_freeContext(m_pImgSwsCTX);
-	
+		
 	// release av frame
 	av_frame_free(&m_pFrame);
 }

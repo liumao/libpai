@@ -16,9 +16,6 @@ Video::~Video() {
 	// stop
 	stop();
 	
-	// release      
-	avformat_close_input(&m_pCTX);
-	
 	// release av packet
 	av_packet_free(&m_pPacket);
 }
