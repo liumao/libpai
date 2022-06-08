@@ -89,7 +89,7 @@ void Wheel::process() {
 	switch (m_nTaskType) {
 	case TaskType::Forward: {
 		// log
-		cout << "forward" << endl;
+		cout << "forward " << m_nKeepMsec << endl;
 		// set pin0 high	
 		digitalWrite(m_nPin0, HIGH);
 		// set pin1 low
@@ -106,7 +106,7 @@ void Wheel::process() {
 		break;
 	case TaskType::Back: {
 		// log
-		cout << "back" << endl;
+		cout << "back " << m_nKeepMsec << endl;
 		// set pin0 low	
 		digitalWrite(m_nPin0, LOW);	
 		// set pin1 high
@@ -123,7 +123,7 @@ void Wheel::process() {
 		break;
 	case TaskType::Left: {
 		// log
-		cout << "left" << endl;
+		cout << "left " << m_nKeepMsec << endl;
 		// set pin0 low	
 		digitalWrite(m_nPin0, HIGH);	
 		// set pin1 high
@@ -140,7 +140,7 @@ void Wheel::process() {
 		break;
 	case TaskType::Right: {
 		// log
-		cout << "right" << endl;
+		cout << "right " << m_nKeepMsec << endl;
 		// set pin0 low	
 		digitalWrite(m_nPin0, LOW);	
 		// set pin1 high

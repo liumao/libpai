@@ -75,36 +75,25 @@ int main(int argc, char* argv[]) {
 		// calc distance
 		auto distance = 25 * 2.8 * 400 / (tFaceLoc.m_nBottom - tFaceLoc.m_nTop);
 		
-		// log
-		cout << "distance " << distance << endl;
-		
 		// turn left or right
 		if (tFaceLoc.m_nRight + tFaceLoc.m_nLeft < 480) {
 #if defined(WHEEL_TEST)
 			wheel.right(0, 100);
 #endif
-			// log
-			cout << "=========right" << endl;
 		} else if (tFaceLoc.m_nRight + tFaceLoc.m_nLeft > 800) {
 #if defined(WHEEL_TEST)
 			wheel.left(0, 100);
 #endif
-			// log
-			cout << "=========left" << endl;
 		} else {
 			// check distance
 			if (distance > 150) {
 #if defined(WHEEL_TEST)
 				wheel.forward(0, 1000);
 #endif
-				// log
-				cout << "=========forward" << endl;
 			} else if (distance < 100) {
 #if defined(WHEEL_TEST)
 				wheel.back(0, 1000);
 #endif
-				// log
-				cout << "=========back" << endl;
 			}
 		}
 	});
