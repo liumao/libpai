@@ -1,7 +1,7 @@
 #include <audio_reco.h>
 #include <script.h>
 
-AudioReco::AudioReco(AVInputFormat *pInFormat, const CmdCallBack pCmdCB) 
+AudioReco::AudioReco(AVInputFormat *pInFormat, const string& strSPModel, const string& strSPBin, const string& strSPDict, const CmdCallBack pCmdCB) 
 	: m_pInFormat(pInFormat),
 	m_pAudio(nullptr),
 	m_nAudSize(0),
@@ -9,6 +9,19 @@ AudioReco::AudioReco(AVInputFormat *pInFormat, const CmdCallBack pCmdCB)
 	m_pCmdCB(pCmdCB) {
 	// meset audio buffer
 	memset(m_cAudBuffer, 0, RECO_BUF_MAX_SIZE);
+	
+	// init config 
+	auto config = cmd_ln_init(nullptr, ps_args(), true, "-hmm", strSPModel.c_str(), "-lm", strSPBin.c_str(), "-dict", strSPDict.c_str(), nullptr);
+	if (!config) {
+		cout << "cmd_ln_init fail" << endl;
+		return;
+	}
+	
+	// init pocketsphinx decoder
+	m_pPsDecoder = ps_init(config);
+	if (!m_pPsDecoder) {
+		cout << "ps_init fail" << endl;
+	}
 }
 
 AudioReco::~AudioReco() {	
@@ -18,6 +31,9 @@ AudioReco::~AudioReco() {
 	// release
 	delete m_pAudio;
 	m_pAudio = nullptr;
+	
+	// release pocketsphinx decoder
+	ps_free(m_pPsDecoder);
 }
 
 bool AudioReco::start(const string &name, const ParamsMap &params) {
@@ -82,41 +98,21 @@ void AudioReco::audioReco() {
 		return;
 	}
 	
-	// init config 
-	auto config = cmd_ln_init(nullptr, ps_args(), true,  
-                 "-hmm", "/usr/share/pocketsphinx/model/en-us/en-us",  
-                 "-lm", "/usr/share/pocketsphinx/model/en-us/en-us.lm.bin",  
-                 "-dict", "/usr/share/pocketsphinx/model/en-us/cmudict-en-us.dict",
-				 "-logfn", "/dev/null", 
-				 nullptr);
-	if (!config) {
-		return;
-	}
-	
-	// init pocketsphinx decoder
-	auto pPsDecoder = ps_init(config);
-	if (!pPsDecoder) {
-		return;
-	}
-	
 	// start
-	ps_start_utt(pPsDecoder);
+	ps_start_utt(m_pPsDecoder);
 	// process
-	ps_process_raw(pPsDecoder, (const int16*)m_cAudBuffer, RECO_BUF_MAX_SIZE / 2, false, false);
+	ps_process_raw(m_pPsDecoder, (const int16*)m_cAudBuffer, RECO_BUF_MAX_SIZE / 2, false, false);
 	// end
-	ps_end_utt(pPsDecoder);
+	ps_end_utt(m_pPsDecoder);
 	
 	// get result
-	int32 score;
-	auto pRet = ps_get_hyp(pPsDecoder, &score);
+	int score;
+	auto pRet = ps_get_hyp(m_pPsDecoder, &score);
 	
 	// callback
 	if (m_pCmdCB) {
 		m_pCmdCB(pRet);
 	}
-	
-	// release pocketsphinx decoder
-	ps_free(pPsDecoder);
 	
 	// reset audio size
 	m_nAudSize = 0;

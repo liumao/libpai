@@ -44,6 +44,9 @@ private:
 	/// \brief audio buffer size
 	int m_nAudSize;
 	
+	/// \brief pocket sphinx decoder
+	ps_decoder_t *m_pPsDecoder; 
+	
 	/// \brief audio buffer
 	char m_cAudBuffer[RECO_BUF_MAX_SIZE];
 	
@@ -57,8 +60,11 @@ public:
 	/// \brief constructor
 	///
 	/// \param [in] pInFormat av input format
+	/// \param [in] strSPModel pocket sphinx model
+	/// \param [in] strSPBin pocket sphinx model bin
+	/// \param [in] strSPDict pocket sphinx model dict
 	/// \param [in] pCmdCB audio cmd callback
-	AudioReco(AVInputFormat *pInFormat, const CmdCallBack pCmdCB);
+	AudioReco(AVInputFormat *pInFormat, const string& strSPModel, const string& strSPBin, const string& strSPDict, const CmdCallBack pCmdCB);
 	
 	/// \brief destructor
 	virtual ~AudioReco();

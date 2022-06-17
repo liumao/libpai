@@ -74,6 +74,7 @@ int main(int argc, char* argv[]) {
 	FaceReco faceReco(pVidInFormat, "shape_predictor_68_face_landmarks.dat", [&](TFaceLoc &tFaceLoc) {
 		// calc distance
 		auto distance = 25 * 2.8 * 400 / (tFaceLoc.m_nBottom - tFaceLoc.m_nTop);
+		cout << "distance " << distance << ", left " << tFaceLoc.m_nLeft << ", right " << tFaceLoc.m_nRight << endl;
 		
 		// turn left or right
 		if (tFaceLoc.m_nRight + tFaceLoc.m_nLeft < 480) {
@@ -84,17 +85,14 @@ int main(int argc, char* argv[]) {
 #if defined(WHEEL_TEST)
 			wheel.left(0, 100);
 #endif
-		} else {
-			// check distance
-			if (distance > 150) {
+		} else if (distance > 150) { // check distance
 #if defined(WHEEL_TEST)
-				wheel.forward(0, 1000);
+			wheel.forward(0, 1000);
 #endif
-			} else if (distance < 100) {
+		} else if (distance < 100) {
 #if defined(WHEEL_TEST)
-				wheel.back(0, 1000);
+			wheel.back(0, 1000);
 #endif
-			}
 		}
 	});
 	
@@ -110,23 +108,23 @@ int main(int argc, char* argv[]) {
 
 #if defined(AUDIO_RECO_TEST)
 	// init audio reco
-	AudioReco audioReco(pAudInFormat, [&](const char *cmd) {
+	AudioReco audioReco(pAudInFormat, "./zh_cn.cd_cont_5000", "./zh_cn.lm.bin", "./zh_cn.dic", [&](const char *cmd) {
 		cout << "=========cmd " << cmd << endl;
 		
 		// check cmd
-		if (!strcmp(cmd, "forward")) {
+		if (!strcmp(cmd, "前进")) {
 #if defined(WHEEL_TEST)
 			wheel.forward(0, 1000);
 #endif
-		} else if (!strcmp(cmd, "back")) {
+		} else if (!strcmp(cmd, "后退")) {
 #if defined(WHEEL_TEST)
 			wheel.back(0, 1000);
 #endif			
-		} else if (!strcmp(cmd, "left")) {
+		} else if (!strcmp(cmd, "左转")) {
 #if defined(WHEEL_TEST)
 			wheel.left(0, 500);
 #endif			
-		} else if (!strcmp(cmd, "right")) {
+		} else if (!strcmp(cmd, "右转")) {
 #if defined(WHEEL_TEST)
 			wheel.right(0, 500);
 #endif			
@@ -184,23 +182,6 @@ int main(int argc, char* argv[]) {
 			audioReco.stop();
 #endif
 			break;
-		} else if(input == 's') {
-#if defined(BLUEZ_TEST)
-			// scan
-			std::vector<TNodeInfo> vNodes;
-			blueZ.scan(vNodes);
-			
-			// log
-			for (auto i = 0; i < vNodes.size(); i++) {
-				cout << "index " << i << ", mac " << vNodes[i].m_cMac << ", name " << vNodes[i].m_cName << endl;
-			}
-#endif
-		} else if (input == 'p') {
-#if defined(BLUEZ_TEST)
-			// pair
-			if (!blueZ.pair("D0:05:E4:0C:DB:54")) {
-			}
-#endif
 		} else if (input == 'f') {
 #if defined(WHEEL_TEST)
 			wheel.forward(0, 3000);
@@ -222,6 +203,7 @@ int main(int argc, char* argv[]) {
 		// sleep
 		delay(1000);
 	}
+	cout << "finishing..." << endl;
 	
 	// sleep
 	delay(3000);

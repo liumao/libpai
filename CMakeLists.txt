@@ -16,7 +16,8 @@ include_directories(./
 					/usr/include 
 					/usr/local/include 
 					/usr/include/glib-2.0
-					/usr/include/pocketsphinx
+					/usr//local/include/pocketsphinx
+					/usr//local/include/sphinxbase
 					/usr/include/dbus-1.0
 					/usr/lib/arm-linux-gnueabihf/dbus-1.0/include
 					/usr/lib/arm-linux-gnueabihf/glib-2.0/include)
