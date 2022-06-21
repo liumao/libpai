@@ -109,6 +109,26 @@ if (${BLUEZ_TEST} STREQUAL "ON")
 	set(lib_files ${lib_files} bluetooth)
 endif()
 
+# check bluez server
+option(BLUEZ_SERVER "This is a default option for BLUEZ_SERVER" OFF)
+if (${BLUEZ_SERVER} STREQUAL "ON")
+	# message
+	message(STATUS "bluez server enable")
+	
+	# add defined
+	add_definitions(-DBLUEZ_SERVER)
+endif()
+
+# check bluez client
+option(BLUEZ_CLIENT "This is a default option for BLUEZ_CLIENT" OFF)
+if (${BLUEZ_CLIENT} STREQUAL "ON")
+	# message
+	message(STATUS "bluez client enable")
+	
+	# add defined
+	add_definitions(-DBLUEZ_CLIENT)
+endif()
+
 # check dbus monitor
 option(DBUS_TEST "This is a default option for DBUS_TEST" OFF)
 if (${DBUS_TEST} STREQUAL "ON")

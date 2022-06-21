@@ -32,6 +32,20 @@
 int main(int argc, char* argv[]) {
 	// init wiringpi 
 	wiringPiSetup();
+	
+	// run
+	bool bRun = true;
+	
+	// check measure temp
+	thread t([&]() {
+		while (bRun) {
+			cout << Script().executeCMD("vcgencmd measure_temp");
+			
+			// sleep
+			delay(10000);
+		}
+	});
+	t.detach();
 
 #if defined(LED_TEST)
 	// init led module
@@ -77,23 +91,17 @@ int main(int argc, char* argv[]) {
 		cout << "distance " << distance << ", left " << tFaceLoc.m_nLeft << ", right " << tFaceLoc.m_nRight << endl;
 		
 		// turn left or right
+#if defined(WHEEL_TEST)
 		if (tFaceLoc.m_nRight + tFaceLoc.m_nLeft < 480) {
-#if defined(WHEEL_TEST)
 			wheel.right(0, 100);
-#endif
 		} else if (tFaceLoc.m_nRight + tFaceLoc.m_nLeft > 800) {
-#if defined(WHEEL_TEST)
 			wheel.left(0, 100);
-#endif
 		} else if (distance > 150) { // check distance
-#if defined(WHEEL_TEST)
 			wheel.forward(0, 1000);
-#endif
 		} else if (distance < 100) {
-#if defined(WHEEL_TEST)
 			wheel.back(0, 1000);
-#endif
 		}
+#endif
 	});
 	
 	// init video
@@ -112,23 +120,17 @@ int main(int argc, char* argv[]) {
 		cout << "=========cmd " << cmd << endl;
 		
 		// check cmd
+#if defined(WHEEL_TEST)
 		if (!strcmp(cmd, "前进")) {
-#if defined(WHEEL_TEST)
 			wheel.forward(0, 1000);
-#endif
 		} else if (!strcmp(cmd, "后退")) {
-#if defined(WHEEL_TEST)
 			wheel.back(0, 1000);
-#endif			
 		} else if (!strcmp(cmd, "左转")) {
-#if defined(WHEEL_TEST)
 			wheel.left(0, 500);
-#endif			
 		} else if (!strcmp(cmd, "右转")) {
-#if defined(WHEEL_TEST)
 			wheel.right(0, 500);
-#endif			
 		}
+#endif
 	});
 	
 	// init audio
@@ -142,8 +144,44 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if defined(BLUEZ_TEST)
-	// init bluez
-	BlueZ blueZ;
+#if defined(BLUEZ_SERVER)
+	// server bluez
+	BlueZ bSvr([&](const char *pData, bool bServer) {
+		// check data
+#if defined(WHEEL_TEST)
+		if (!strcmp(pData, "前进")) {
+			wheel.forward(0, 0);
+		} else if (!strcmp(pData, "后退")) {
+			wheel.back(0, 0);
+		} else if (!strcmp(pData, "左转")) {
+			wheel.left(0, 0);
+		} else if (!strcmp(pData, "右转")) {
+			wheel.right(0, 0);
+		} else if (!strcmp(pData, "暂停")) {
+			wheel.pause();
+		} 
+#endif
+	});
+	bSvr.startServer(0x100b);
+#endif
+	
+#if defined(BLUEZ_CLIENT)
+	// client bluez
+	BlueZ bCli([&](const char *pData, bool bServer) {
+		cout << "received " << pData << endl;
+	});
+	if (bCli.createClient("DC:A6:32:30:A1:3B", 0x100b)) {
+		thread t1([&]() {
+			while (bRun) {
+				// send message
+				bCli.sendMsg("hello world!");
+				// sleep
+				delay(10000);
+			}
+		});
+		t1.detach();
+	}
+#endif
 #endif
 
 #if defined(DBUS_TEST)
@@ -161,7 +199,10 @@ int main(int argc, char* argv[]) {
 	// wait input
 	char input;
 	while(cin >> input) {
-		if (input == 'q') {		
+		if (input == 'q') {	
+			// set run
+			bRun = false;
+			
 #if defined(LED_TEST)
 			// turn off led
 			led.turnOff(0);
@@ -175,6 +216,11 @@ int main(int argc, char* argv[]) {
 #if defined(FACE_RECO_TEST)
 			// stop face reco
 			faceReco.stop();
+#endif
+
+#if defined(BLUEZ_TEST)
+			// stop bluez
+			bSvr.stopServer();
 #endif
 
 #if defined(AUDIO_RECO_TEST)

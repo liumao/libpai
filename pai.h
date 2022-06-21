@@ -25,14 +25,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 /// \brief common headers
 #include <wiringPi.h>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/hci.h>
-#include <bluetooth/hci_lib.h>
+#include <glib.h>
+#include <gio/gio.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <glib.h>
-#include <gio/gio.h>
 #include <iostream>
 #include <thread>
 #include <mutex>
@@ -116,6 +113,11 @@ typedef function<void(const char *)> CmdCallBack;
 #define NAME_SIZE 248
 /// \brief mac size
 #define MAC_SIZE 19
+/// \brief blue tooth header
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/l2cap.h>
+#include <bluetooth/hci.h>
+#include <bluetooth/hci_lib.h>
 
 /// \brief node info
 typedef struct tagNodeInfo {
@@ -125,6 +127,9 @@ typedef struct tagNodeInfo {
 	/// \brief device's name
 	char m_cName[NAME_SIZE];
 }TNodeInfo, *PNodeInfo;
+
+/// \brief callback
+typedef function<void(const char *, bool)> BulezCallBack;
 #endif
 
 #if defined(DBUS_TEST)
@@ -447,7 +452,8 @@ typedef enum class TaskType : int {
 	Forward,
 	Back,
 	Left,
-	Right
+	Right,
+	Pause
 }TTaskType;
 
 /// \brief task

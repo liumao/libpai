@@ -101,7 +101,9 @@ void Wheel::process() {
 		// sleep for next step
 		delay(m_nKeepMsec);
 		// stop
-		pause();
+		if (m_nKeepMsec) {
+			pause();
+		}
 	}
 		break;
 	case TaskType::Back: {
@@ -118,7 +120,9 @@ void Wheel::process() {
 		// sleep for next step
 		delay(m_nKeepMsec);
 		// stop
-		pause();
+		if (m_nKeepMsec) {
+			pause();
+		}
 	}
 		break;
 	case TaskType::Left: {
@@ -135,7 +139,9 @@ void Wheel::process() {
 		// sleep for next step
 		delay(m_nKeepMsec);
 		// stop
-		pause();
+		if (m_nKeepMsec) {
+			pause();
+		}
 	}
 		break;
 	case TaskType::Right: {
@@ -152,7 +158,9 @@ void Wheel::process() {
 		// sleep for next step
 		delay(m_nKeepMsec);
 		// stop
-		pause();
+		if (m_nKeepMsec) {
+			pause();
+		}
 	}
 		break;
 	default:

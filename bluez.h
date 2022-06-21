@@ -43,9 +43,22 @@ private:
 	/// \brief sock
 	int m_nSock;
 	
+	/// \brief run flag
+	bool m_bRun;
+	
+	/// \brief server id
+	int m_nServerId;
+	/// \brief client id
+	int m_nClientId;
+	
+	/// \brief bluez callback
+	BulezCallBack m_pBluezCB;
+	
 public:
 	/// \brief constructor
-	BlueZ();
+	///
+	/// \param [in] pBluezCB bluez callback
+	BlueZ(const BulezCallBack pBluezCB);
 	
 	/// \brief destructor
 	virtual ~BlueZ();
@@ -63,6 +76,34 @@ public:
 	///
 	/// \return true/false
 	bool pair(const string& strDeviceName);
+	
+	/// \brief start server
+	///
+	/// \param [in] nPort port
+	///
+	/// \return true/false
+	bool startServer(int nPort);
+	
+	/// \brief stop server
+	///
+	/// \return 
+	void stopServer();
+	
+	/// \brief create client
+	///
+	/// \param [in] strDeviceId blue tooth id
+	/// \param [in] nPort port
+	///
+	/// return true/false
+	bool createClient(const string& strDeviceId, int nPort);
+	
+	/// \brief send message
+	///
+	/// \param [in] strMsg
+	void sendMsg(const string& strMsg);
+	
+	/// \brief delete client
+	void deleteClient();
 
 };
 
