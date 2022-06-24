@@ -103,7 +103,14 @@ public:
 	void sendMsg(const string& strMsg);
 	
 	/// \brief delete client
+	///
+	/// \return 
 	void deleteClient();
+	
+	/// \brief get client id
+	///
+	/// \return client id
+	int getClientId();
 
 };
 

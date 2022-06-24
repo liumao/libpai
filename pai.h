@@ -30,6 +30,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <fcntl.h>
 #include <iostream>
 #include <thread>
 #include <mutex>
@@ -43,6 +44,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <sstream>
 #include <condition_variable>
 using namespace std;
+
+/// \brief invalid socket
+#define INVALID_SOCKET -1
 
 #if defined(FACE_RECO_TEST) || defined(AUDIO_RECO_TEST)
 /// \brief define params map
@@ -113,9 +117,11 @@ typedef function<void(const char *)> CmdCallBack;
 #define NAME_SIZE 248
 /// \brief mac size
 #define MAC_SIZE 19
+/// \brief buf size
+#define BUF_SIZE 1024
 /// \brief blue tooth header
 #include <bluetooth/bluetooth.h>
-#include <bluetooth/l2cap.h>
+#include <bluetooth/rfcomm.h>
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
 
@@ -130,6 +136,9 @@ typedef struct tagNodeInfo {
 
 /// \brief callback
 typedef function<void(const char *, bool)> BulezCallBack;
+
+/// \brief bluetooth discoverable timeout
+#define BLUETOOTH_DISCOVERABLE_TIMEOUT 120
 #endif
 
 #if defined(DBUS_TEST)

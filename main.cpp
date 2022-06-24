@@ -147,6 +147,8 @@ int main(int argc, char* argv[]) {
 #if defined(BLUEZ_SERVER)
 	// server bluez
 	BlueZ bSvr([&](const char *pData, bool bServer) {
+		// log
+		cout << "bluez server " << pData << endl;
 		// check data
 #if defined(WHEEL_TEST)
 		if (!strcmp(pData, "前进")) {
@@ -159,10 +161,35 @@ int main(int argc, char* argv[]) {
 			wheel.right(0, 0);
 		} else if (!strcmp(pData, "暂停")) {
 			wheel.pause();
-		} 
+		}
 #endif
 	});
-	bSvr.startServer(0x100b);
+	// start bluez service
+	bSvr.startServer(1);
+	
+	// check bluetooth status
+	thread tCheck([&]() {
+		while (bRun) {
+			// sleep
+			delay(BLUETOOTH_DISCOVERABLE_TIMEOUT * 1000);
+			
+			// check status
+			if (bSvr.getClientId() <= 0) {
+				// log
+				cout << "restart bluetooth" << endl;
+
+				// stop bluez
+				bSvr.stopServer();
+				
+				// sleep
+				delay(2000);
+				
+				// start bluez service
+				bSvr.startServer(1);
+			}
+		}
+	});
+	tCheck.detach();
 #endif
 	
 #if defined(BLUEZ_CLIENT)
@@ -170,7 +197,7 @@ int main(int argc, char* argv[]) {
 	BlueZ bCli([&](const char *pData, bool bServer) {
 		cout << "received " << pData << endl;
 	});
-	if (bCli.createClient("DC:A6:32:30:A1:3B", 0x100b)) {
+	if (bCli.createClient("DC:A6:32:30:A1:3B", 1)) {
 		thread t1([&]() {
 			while (bRun) {
 				// send message
@@ -219,8 +246,10 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if defined(BLUEZ_TEST)
+#if defined(BLUEZ_SERVER)			
 			// stop bluez
 			bSvr.stopServer();
+#endif
 #endif
 
 #if defined(AUDIO_RECO_TEST)
