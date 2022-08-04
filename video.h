@@ -46,10 +46,25 @@ private:
 	
 	/// \brief av packet
 	AVPacket *m_pPacket;
+
+	/// \brief display image context
+    struct SwsContext *m_pDisImgSwsCTX;
+	/// \brief detect image context
+    struct SwsContext *m_pDetImgSwsCTX;
+	
+	/// \brief display mat
+	Mat m_cvDisImage;
+	/// \brief display cv line size
+	int m_cvDisLinesizes[CV_LINE_SIZE];
+	
+	/// \brief detect mat
+	Mat m_cvDetImage;
+	/// \brief detect cv line size
+	int m_cvDetLinesizes[CV_LINE_SIZE];
 	
 public:
 	/// \brief constructor
-	Video(AVInputFormat *pAVInput, AVCallBack pCB);
+	Video(AVCallBack pCB);
 	
 	/// \brief destructor
 	virtual ~Video();
@@ -76,6 +91,38 @@ public:
 	///
 	/// \return codec
 	AVCodecContext* getDecoder() const;
+
+	/// \brief set display sws context
+	///
+	/// \param [in] nWidth width
+	/// \param [in] nHeight height
+	/// \param [in] dstFormat dest format
+	///
+	/// \return true/false
+	bool setDisplaySwsContext(int nWidth, int nHeight, enum AVPixelFormat dstFormat);
+	
+	/// \brief set detect sws context
+	///
+	/// \param [in] nWidth width
+	/// \param [in] nHeight height
+	/// \param [in] dstFormat dest format
+	///
+	/// \return true/false
+	bool setDetectSwsContext(int nWidth, int nHeight, enum AVPixelFormat dstFormat);
+
+	/// \brief resample display
+	///
+	/// \param [in] pFrame frame
+	///
+	/// \return display mat
+	Mat* resampleDisplay(AVFrame* pFrame);
+	
+	/// \brief resample detect
+	///
+	/// \param [in] pFrame frame
+	///
+	/// \return detect mat
+	Mat* resampleDetect(AVFrame* pFrame);
 	
 private:
 	/// \brief capture frame

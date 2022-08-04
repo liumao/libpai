@@ -14,13 +14,9 @@ set(CMAKE_SH CMAKE_SH-NOTFOUND)
 # include path
 include_directories(./ 
 					/usr/include 
-					/usr/local/include 
-					/usr/include/glib-2.0
+					/usr/local/include
 					/usr/local/include/pocketsphinx
-					/usr/local/include/sphinxbase
-					/usr/include/dbus-1.0
-					/usr/lib/arm-linux-gnueabihf/dbus-1.0/include
-					/usr/lib/arm-linux-gnueabihf/glib-2.0/include)
+					/usr/local/include/sphinxbase)
 
 # Link and Set Output Path
 link_directories(${PROJECT_SOURCE_DIR})
@@ -29,7 +25,7 @@ link_directories(${PROJECT_SOURCE_DIR})
 set(src_files main.cpp script.cpp)
 
 # Lib Files
-set(lib_files wiringPi pthread glib-2.0 gio-2.0)
+set(lib_files wiringPi pthread)
 
 # check led
 option(LED_TEST "This is a default option for LED_TEST" OFF)
@@ -69,10 +65,10 @@ if (${FACE_RECO_TEST} STREQUAL "ON")
 	add_definitions(-D__STDC_CONSTANT_MACROS)
 	
 	# add src file
-	set(src_files ${src_files} video.cpp face_reco.cpp)
+	set(src_files ${src_files} video.cpp)
 	
 	# add lib file
-	set(lib_files ${lib_files} dlib png avcodec avdevice avformat swscale avutil opencv_core opencv_imgproc)
+	set(lib_files ${lib_files} dlib png avcodec avdevice avformat swscale avutil opencv_core opencv_imgproc opencv_highgui X11 opencv_imgcodecs)
 endif()
 
 # check audio reco
@@ -87,7 +83,7 @@ if (${AUDIO_RECO_TEST} STREQUAL "ON")
 	add_definitions(-D__STDC_CONSTANT_MACROS)
 	
 	# add src file
-	set(src_files ${src_files} audio.cpp audio_reco.cpp)
+	set(src_files ${src_files} audio.cpp)
 	
 	# add lib file
 	set(lib_files ${lib_files} avcodec avdevice avformat avutil pocketsphinx sphinxbase sphinxad)
@@ -127,22 +123,6 @@ if (${BLUEZ_CLIENT} STREQUAL "ON")
 	
 	# add defined
 	add_definitions(-DBLUEZ_CLIENT)
-endif()
-
-# check dbus monitor
-option(DBUS_TEST "This is a default option for DBUS_TEST" OFF)
-if (${DBUS_TEST} STREQUAL "ON")
-	# message
-	message(STATUS "dbus enable")
-	
-	# add defined
-	add_definitions(-DDBUS_TEST)
-	
-	# add src file
-	set(src_files ${src_files} dbus_monitor.cpp)
-	
-	# add lib file
-	set(lib_files ${lib_files} dbus-1)
 endif()
 
 # Generate execute

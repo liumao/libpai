@@ -1,7 +1,7 @@
 #include <video.h>
 
-Video::Video(AVInputFormat *pAVInput, AVCallBack pCB)
-	: m_pInput(pAVInput),
+Video::Video(AVCallBack pCB)
+	: m_pInput(nullptr),
 	m_pCTX(nullptr),
 	m_pAVCB(pCB),
 	m_bRun(false),
@@ -16,6 +16,21 @@ Video::~Video() {
 	// stop
 	stop();
 	
+	// release
+	avformat_close_input(&m_pCTX);
+
+	// release display sws 
+	if (m_pDisImgSwsCTX) {
+		sws_freeContext(m_pDisImgSwsCTX);
+		m_pDisImgSwsCTX = nullptr;
+	}
+	
+	// release detect sws 
+	if (m_pDetImgSwsCTX) {
+		sws_freeContext(m_pDetImgSwsCTX);
+		m_pDetImgSwsCTX = nullptr;
+	}
+	
 	// release av packet
 	av_packet_free(&m_pPacket);
 }
@@ -23,6 +38,14 @@ Video::~Video() {
 bool Video::init(const string &name, const ParamsMap &params) {
 	// check device name 
 	if(name.empty()) {
+		return false;
+	}
+
+	// open video device
+	m_pInput = av_find_input_format(VIDEO_DEVICE_NAME);
+	if (!m_pInput) {		
+		// log
+		cout << "av_find_input_format " << VIDEO_DEVICE_NAME << " error" << endl;
 		return false;
 	}
 	
@@ -92,6 +115,78 @@ void Video::stop() {
 
 AVCodecContext* Video::getDecoder() const {
 	return m_pCTX->streams[m_nIndex]->codec;
+}
+
+bool Video::setDisplaySwsContext(int nWidth, int nHeight, enum AVPixelFormat dstFormat) {
+	// fill display mat
+	m_cvDisImage = Mat(nWidth, nHeight, CV_8UC3);
+	// fill cv lines
+	m_cvDisLinesizes[0] = m_cvDisImage.step1();
+	
+	// decoder
+	auto decoder = getDecoder();
+	
+	// init sws context
+	m_pDisImgSwsCTX = sws_getContext(decoder->width, decoder->height, decoder->pix_fmt, 
+								  nWidth, nHeight, dstFormat, 
+								  SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
+	
+	// check display sws context
+	if (!m_pDisImgSwsCTX) {
+		cout << "display sws_getContext fail" << endl;
+		return false;
+	}
+	return true;
+}
+
+bool Video::setDetectSwsContext(int nWidth, int nHeight, enum AVPixelFormat dstFormat) {
+	// fill detect mat
+	m_cvDetImage = Mat(nWidth, nHeight, CV_8UC3);
+	// fill cv lines
+	m_cvDetLinesizes[0] = m_cvDetImage.step1();
+	
+	// decoder
+	auto decoder = getDecoder();
+	
+	// init sws context
+	m_pDetImgSwsCTX = sws_getContext(decoder->width, decoder->height, decoder->pix_fmt, 
+								  nWidth, nHeight, dstFormat, 
+								  SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
+	
+	// check detect sws context
+	if (!m_pDetImgSwsCTX) {
+		cout << "detect sws_getContext fail" << endl;
+		return false;
+	}
+	return true;
+}
+
+Mat* Video::resampleDisplay(AVFrame* pFrame) {
+	// check display sws context 
+	if (!m_pDisImgSwsCTX) {
+		cout << "sws context is not ready" << endl;
+		return nullptr;
+	}
+	
+	// decoder
+	auto decoder = getDecoder();
+	// convert to mat
+	sws_scale(m_pDisImgSwsCTX, pFrame->data, pFrame->linesize, 0, decoder->height, &m_cvDisImage.data, m_cvDisLinesizes);
+	return &m_cvDisImage;
+}
+
+Mat* Video::resampleDetect(AVFrame* pFrame) {
+	// check detect sws context 
+	if (!m_pDetImgSwsCTX) {
+		cout << "sws context is not ready" << endl;
+		return nullptr;
+	}
+	
+	// decoder
+	auto decoder = getDecoder();
+	// convert to mat
+	sws_scale(m_pDetImgSwsCTX, pFrame->data, pFrame->linesize, 0, decoder->height, &m_cvDetImage.data, m_cvDetLinesizes);
+	return &m_cvDetImage;
 }
 
 bool Video::captureFrame() {

@@ -49,7 +49,9 @@ private:
 	
 public:
 	/// \brief constructor
-	Audio(AVInputFormat *pAVInput, AVCallBack pCB);
+	///
+	/// \param [in] pCB av callback
+	Audio(const AVCallBack pCB);
 	
 	/// \brief destructor
 	virtual ~Audio();

@@ -1,7 +1,7 @@
 #include <audio.h>
 
-Audio::Audio(AVInputFormat *pAVInput, AVCallBack pCB)
-	: m_pInput(pAVInput),
+Audio::Audio(const AVCallBack pCB)
+	: m_pInput(nullptr),
 	m_pCTX(nullptr),
 	m_pAVCB(pCB),
 	m_bRun(false),
@@ -16,7 +16,7 @@ Audio::~Audio() {
 	// stop
 	stop();
 	
-	// release      
+	// release
 	avformat_close_input(&m_pCTX);
 	
 	// release av packet
@@ -26,6 +26,14 @@ Audio::~Audio() {
 bool Audio::init(const string &name, const ParamsMap &params) {
 	// check device name 
 	if(name.empty()) {
+		return false;
+	}
+	
+	// open audio device
+	m_pInput = av_find_input_format(AUDIO_DEVICE_NAME);
+	if (!m_pInput) {		
+		// log
+		cout << "av_find_input_format " << AUDIO_DEVICE_NAME << " error" << endl;
 		return false;
 	}
 	

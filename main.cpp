@@ -6,16 +6,13 @@
 #include <wheel.h>
 #endif
 #if defined(FACE_RECO_TEST)
-#include <face_reco.h>
+#include <video.h>
 #endif
 #if defined(AUDIO_RECO_TEST)
-#include <audio_reco.h>
+#include <audio.h>
 #endif
 #if defined(BLUEZ_TEST)
 #include <bluez.h>
-#endif
-#if defined(DBUS_TEST)
-#include <dbus_monitor.h>
 #endif
 
 /// \brief define pin
@@ -29,23 +26,15 @@
 #define RIGHT_WHEEL_1 2
 #define RIGHT_WHEEL_2 4
 
+/// \brief line size
+#define CV_LINE_SIZE 1
+
 int main(int argc, char* argv[]) {
 	// init wiringpi 
 	wiringPiSetup();
 	
 	// run
 	bool bRun = true;
-	
-	// check measure temp
-	thread t([&]() {
-		while (bRun) {
-			cout << Script().executeCMD("vcgencmd measure_temp");
-			
-			// sleep
-			delay(10000);
-		}
-	});
-	t.detach();
 
 #if defined(LED_TEST)
 	// init led module
@@ -54,7 +43,7 @@ int main(int argc, char* argv[]) {
 	
 #if defined(WHEEL_TEST)
 	// init wheels
-	Wheel wheel(LEFT_WHEEL_1, LEFT_WHEEL_2, RIGHT_WHEEL_1, RIGHT_WHEEL_2);	
+	auto wheel = make_shared<Wheel>(LEFT_WHEEL_1, LEFT_WHEEL_2, RIGHT_WHEEL_1, RIGHT_WHEEL_2);	
 #endif
 
 #if defined(FACE_RECO_TEST) || defined(AUDIO_RECO_TEST)
@@ -64,83 +53,123 @@ int main(int argc, char* argv[]) {
 #endif
 	
 #if defined(FACE_RECO_TEST)
-	// open video device
-	auto pVidInFormat = av_find_input_format(VIDEO_DEVICE_NAME);
-	if (!pVidInFormat) {		
-		// log
-		cout << "av_find_input_format " << VIDEO_DEVICE_NAME << " error" << endl;
-		return 1;
-	}
-#endif
-
-#if defined(AUDIO_RECO_TEST)
-	// open audio device
-	auto pAudInFormat = av_find_input_format(AUDIO_DEVICE_NAME);
-	if (!pAudInFormat) {		
-		// log
-		cout << "av_find_input_format " << AUDIO_DEVICE_NAME << " error" << endl;
-		return 1;
-	}
-#endif
+	// name
+	string strName = "";
 	
-#if defined(FACE_RECO_TEST)
-	// init face reco
-	FaceReco faceReco(pVidInFormat, "shape_predictor_68_face_landmarks.dat", [&](TFaceLoc &tFaceLoc) {
-		// calc distance
-		auto distance = 25 * 2.8 * 400 / (tFaceLoc.m_nBottom - tFaceLoc.m_nTop);
-		cout << "distance " << distance << ", left " << tFaceLoc.m_nLeft << ", right " << tFaceLoc.m_nRight << endl;
-		
-		// turn left or right
-#if defined(WHEEL_TEST)
-		if (tFaceLoc.m_nRight + tFaceLoc.m_nLeft < 480) {
-			wheel.right(0, 100);
-		} else if (tFaceLoc.m_nRight + tFaceLoc.m_nLeft > 800) {
-			wheel.left(0, 100);
-		} else if (distance > 150) { // check distance
-			wheel.forward(0, 1000);
-		} else if (distance < 100) {
-			wheel.back(0, 1000);
-		}
-#endif
-	});
+	// detector
+	auto pFaceDetector = get_frontal_face_detector();
+	// init shaped predictor
+	shape_predictor pShapePredictor;
+	deserialize("shape_predictor_68_face_landmarks.dat") >> pShapePredictor;
+	// init anet type
+	ANET_TYPE pFaceRecoDNN;
+	deserialize("dlib_face_recognition_resnet_model_v1.dat") >> pFaceRecoDNN;
+	
+	// show win
+	dlib::image_window win;
+	
+	// face frame count
+	long nFaceFrame = 0;
+	
+	// face position
+	std::vector<dlib::rectangle> dets;
+	
+	// create video
+	Video video([&](AVPacket *packet) -> void {
+			// decoder
+			auto decoder = video.getDecoder();
+			
+			// frmae
+			AVFrame* pFrame = av_frame_alloc();
+			
+			// got
+			int nGot;
+			if (avcodec_decode_video2(decoder, pFrame, &nGot, packet) < 0 || !nGot) {
+				// release av frame
+				av_frame_free(&pFrame);
+				return;
+			}
+
+			// resample display
+			auto matDis = video.resampleDisplay(pFrame);
+
+			// check num
+			if (nFaceFrame++ % 5 == 0) {
+				// resample detect
+				auto matDet = video.resampleDetect(pFrame);
+	
+				// gray mat
+				Mat gray;
+				cvtColor(*matDet, gray, COLOR_RGB2GRAY);
+				
+				// image 
+				array2d<unsigned char> img;
+				dlib::assign_image(img, dlib::cv_image<unsigned char>(gray));
+				// face vector
+				dets = pFaceDetector(img);
+			}
+			
+			// display face position
+			for (auto det = dets.begin(); det != dets.end(); det++) {
+				cv::Rect rect((*det).left() * 2, (*det).top() * 2, (*det).width() * 2, (*det).height() * 2);
+				cv::rectangle(*matDis, rect, cv::Scalar(0, 0, 255), 1, 1, 0);
+				cv::Point origin = {(*det).left() * 2, (*det).top() * 2};
+				cv::putText(*matDis, "", origin, cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 0, 0), 2, 2, 0);
+				
+				// take 68 pointer feature
+				//full_object_detection shape = pShapePredictor(img, *det);
+				// 128 face vector
+				//dlib::matrix<dlib::rgb_pixel> faceChip;
+				//dlib::extract_image_chip(img, dlib::get_face_chip_details(shape, 150, 0.25), faceChip);
+			
+				// get 128 face vector
+				//dlib::matrix<float, 0, 1> face = pFaceRecoDNN(faceChip);
+			}
+			
+			// dlib show image
+			dlib::cv_image<rgb_pixel> imgD(*matDis);
+			win.clear_overlay();
+			win.set_image(imgD);
+			
+			// release av frame
+			av_frame_free(&pFrame);
+		});
 	
 	// init video
-	if (!faceReco.start("/dev/video0", {
+	if (!video.init("/dev/video0", {
 			{"video_size", "640x480"},
 			{"framerate", "30"},
 			{"b", "360000"}
 		})) {
 		cout << "video init fail" << endl;
 	}
+
+	// set display sws context
+	if (!video.setDisplaySwsContext(640, 480, AVPixelFormat::AV_PIX_FMT_BGR24)) {
+		cout << "set display sws context fail" << endl;
+	}
+	// set detect sws context
+	if (!video.setDetectSwsContext(320, 240, AVPixelFormat::AV_PIX_FMT_BGR24)) {
+		cout << "set detect sws context fail" << endl;
+	}
+	video.start();
 #endif
 
 #if defined(AUDIO_RECO_TEST)
-	// init audio reco
-	AudioReco audioReco(pAudInFormat, "./zh_cn.cd_cont_5000", "./zh_cn.lm.bin", "./zh_cn.dic", [&](const char *cmd) {
-		cout << "=========cmd " << cmd << endl;
+	// create audio
+	Audio audio([&](AVPacket *packet) -> void {
 		
-		// check cmd
-#if defined(WHEEL_TEST)
-		if (!strcmp(cmd, "前进")) {
-			wheel.forward(0, 1000);
-		} else if (!strcmp(cmd, "后退")) {
-			wheel.back(0, 1000);
-		} else if (!strcmp(cmd, "左转")) {
-			wheel.left(0, 500);
-		} else if (!strcmp(cmd, "右转")) {
-			wheel.right(0, 500);
-		}
-#endif
 	});
 	
 	// init audio
-	if (!audioReco.start("hw:1", {
+	if (!audio.init("hw:2", {
 			{"sample_rate", "8000"},
 			{"b", "16000"},
 			{"channels", "1"}
 		})) {
 		cout << "audio init fail" << endl;
 	}
+	audio.start();
 #endif
 
 #if defined(BLUEZ_TEST)
@@ -152,15 +181,15 @@ int main(int argc, char* argv[]) {
 		// check data
 #if defined(WHEEL_TEST)
 		if (!strcmp(pData, "前进")) {
-			wheel.forward(0, 0);
+			wheel->forward(0, 0);
 		} else if (!strcmp(pData, "后退")) {
-			wheel.back(0, 0);
+			wheel->back(0, 0);
 		} else if (!strcmp(pData, "左转")) {
-			wheel.left(0, 0);
+			wheel->left(0, 0);
 		} else if (!strcmp(pData, "右转")) {
-			wheel.right(0, 0);
+			wheel->right(0, 0);
 		} else if (!strcmp(pData, "暂停")) {
-			wheel.pause();
+			wheel->pause();
 		}
 #endif
 	});
@@ -210,18 +239,6 @@ int main(int argc, char* argv[]) {
 	}
 #endif
 #endif
-
-#if defined(DBUS_TEST)
-	// init dbus monitor
-	DBusMonitor helloSDBus("hello.world.service");
-	helloSDBus.init();
-	helloSDBus.addMonitorMethod("type='signal',interface='hello.world.client'");
-	helloSDBus.start();
-	
-	DBusMonitor clientCDBus("hello.world.client");
-	clientCDBus.init();
-	clientCDBus.sendSignal("hello world", "/hello/world/client", "hello.world.client", "hello");
-#endif
 	
 	// wait input
 	char input;
@@ -237,12 +254,12 @@ int main(int argc, char* argv[]) {
 			
 #if defined(WHEEL_TEST)
 			// pause
-			wheel.pause();
+			wheel->pause();
 #endif
 
 #if defined(FACE_RECO_TEST)
-			// stop face reco
-			faceReco.stop();
+			// stop video
+			video.stop();
 #endif
 
 #if defined(BLUEZ_TEST)
@@ -253,25 +270,36 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if defined(AUDIO_RECO_TEST)
-			// stop audio reco
-			audioReco.stop();
+			// stop audio
+			audio.stop();
 #endif
 			break;
 		} else if (input == 'f') {
 #if defined(WHEEL_TEST)
-			wheel.forward(0, 3000);
+			wheel->forward(0, 3000);
 #endif
 		} else if (input == 'b') {
 #if defined(WHEEL_TEST)
-			wheel.back(0, 3000);
+			wheel->back(0, 3000);
 #endif
 		} else if (input == 'l') {
 #if defined(WHEEL_TEST)
-			wheel.left(0, 500);
+			wheel->left(0, 500);
 #endif
 		} else if (input == 'r') {
 #if defined(WHEEL_TEST)
-			wheel.right(0, 500);
+			wheel->right(0, 500);
+#endif
+		} else if (input == 'i') {
+#if defined(FACE_RECO_TEST)
+#endif
+		} else if (input == 'n') {
+#if defined(FACE_RECO_TEST)
+			cout << "input name: ";
+			cin >> strName;
+#endif
+		} else if (input == 'c') {
+#if defined(FACE_RECO_TEST)
 #endif
 		}
 		

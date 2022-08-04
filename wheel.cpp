@@ -29,7 +29,7 @@ void Wheel::forward(int nSpeed, int nKeepMsec) {
 	m_nSpeed = nSpeed;
 	
 	// dispatch task
-	SingleTon<TPPool<TTask*>>::instance()->dispatchTask(this);
+	SingleTon<TPPool<shared_ptr<TTask>>>::instance()->dispatchTask(shared_from_this());
 }
 
 void Wheel::back(int nSpeed, int nKeepMsec) {
@@ -41,7 +41,7 @@ void Wheel::back(int nSpeed, int nKeepMsec) {
 	m_nSpeed = nSpeed;
 	
 	// dispatch task
-	SingleTon<TPPool<TTask*>>::instance()->dispatchTask(this);
+	SingleTon<TPPool<shared_ptr<TTask>>>::instance()->dispatchTask(shared_from_this());
 }
 
 void Wheel::left(int nSpeed, int nKeepMsec) {
@@ -53,7 +53,7 @@ void Wheel::left(int nSpeed, int nKeepMsec) {
 	m_nSpeed = nSpeed;
 	
 	// dispatch task
-	SingleTon<TPPool<TTask*>>::instance()->dispatchTask(this);
+	SingleTon<TPPool<shared_ptr<TTask>>>::instance()->dispatchTask(shared_from_this());
 }
 
 void Wheel::right(int nSpeed, int nKeepMsec) {
@@ -65,7 +65,7 @@ void Wheel::right(int nSpeed, int nKeepMsec) {
 	m_nSpeed = nSpeed;
 	
 	// dispatch task
-	SingleTon<TPPool<TTask*>>::instance()->dispatchTask(this);
+	SingleTon<TPPool<shared_ptr<TTask>>>::instance()->dispatchTask(shared_from_this());
 }
 
 void Wheel::pause() {

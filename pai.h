@@ -25,8 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 /// \brief common headers
 #include <wiringPi.h>
-#include <glib.h>
-#include <gio/gio.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -81,6 +79,7 @@ typedef function<void(AVPacket *)> AVCallBack;
 #include <dlib/image_processing.h>
 #include <dlib/opencv.h>
 #include <dlib/dnn.h>
+#include <dlib/gui_widgets.h>
 #include <dlib/clustering.h>
 #include <dlib/string.h>
 using namespace dlib;
@@ -88,18 +87,81 @@ using namespace dlib;
 /// \brief opencv
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 using namespace cv;
 
 /// \brief face location
 typedef struct tagFaceLoc {
 	long m_nLeft;
-	long m_nRight;
 	long m_nTop;
-	long m_nBottom;
+	unsigned long m_nWidth;
+	unsigned long m_nHeight;
 }TFaceLoc, *PFaceLoc;
 
-/// \brief callback
-typedef function<void(TFaceLoc &)> LocCallBack;
+/// \brief face info
+typedef struct tagFaceInfo {
+	string m_strName;
+	TFaceLoc m_tFaceLoc;
+}TFaceInfo, *PFaceInfo;
+
+/// \brief face reco
+template <template <int,template<typename>class,int,typename> class block, int N, template<typename>class BN, typename SUBNET>
+using RESIDUAL = dlib::add_prev1<block<N, BN, 1, dlib::tag1<SUBNET>>>;
+template <template <int,template<typename>class,int,typename> class block, int N, template<typename>class BN, typename SUBNET>
+using RESIDUAL_DOWN = dlib::add_prev2<dlib::avg_pool<2, 2, 2, 2, dlib::skip1<dlib::tag2<block<N, BN, 2, dlib::tag1<SUBNET>>>>>>; 
+template <int N, template <typename> class BN, int stride, typename SUBNET> 
+using BLOCK = BN<dlib::con<N, 3, 3, 1, 1, dlib::relu<BN<dlib::con<N, 3, 3, stride, stride, SUBNET>>>>>;
+template <int N, typename SUBNET> 
+using ARES = dlib::relu<RESIDUAL<BLOCK, N, dlib::affine, SUBNET>>;
+template <int N, typename SUBNET> 
+using ARES_DOWN = dlib::relu<RESIDUAL_DOWN<BLOCK, N, dlib::affine, SUBNET>>;
+template <typename SUBNET> 
+using alevel0 = ARES_DOWN<256, SUBNET>;
+template <typename SUBNET> 
+using alevel1 = ARES<256, ARES<256, ARES_DOWN<256, SUBNET>>>;
+template <typename SUBNET> 
+using alevel2 = ARES<128, ARES<128, ARES_DOWN<128, SUBNET>>>;
+template <typename SUBNET> 
+using alevel3 = ARES<64, ARES<64, ARES<64, ARES_DOWN<64, SUBNET>>>>;
+template <typename SUBNET> 
+using alevel4 = ARES<32, ARES<32, ARES<32, SUBNET>>>;
+using ANET_TYPE = dlib::loss_metric<dlib::fc_no_bias<128, 
+									dlib::avg_pool_everything<alevel0<alevel1<alevel2<alevel3<alevel4<
+									dlib::max_pool<3, 3, 2, 2, 
+									dlib::relu<dlib::affine<dlib::con<32, 7, 7, 2, 2, dlib::input_rgb_image_sized<150>>>>
+									>>>>>>>>>;
+
+/// \brief set face reco type
+typedef enum class FaceRecoType : int {
+	NotSet = 0,
+	SetNotGetTarget,
+	SetAndGetTarget
+}TFaceRecoType;
+
+/// \brief face reco feature 
+typedef struct tagFaceRecoFeature {
+	tagFaceRecoFeature(const string& strName, const dlib::matrix<float, 0, 1> &tTargetFace)
+		: m_strName(strName),
+		m_tTargetFace(tTargetFace) {
+	}
+	string m_strName;
+	dlib::matrix<float, 0, 1> m_tTargetFace;
+}TFaceRecoFeature, *PFaceRecoFeature;
+
+/// \brief real face reco info
+typedef struct tagRealFaceRecoInfo {
+	Mat m_img;
+	list<TFaceInfo> m_lstFaceInfo;
+}TRealFaceRecoInfo, *PRealFaceRecoInfo;
+
+/// \brief face vector num
+#define FACE_VECTOR_NUM 128
+/// \brief get target face time
+#define GET_TARGET_FACE_TIME 1000
+/// \brief process face time
+#define PROCESS_FACE_TIME 20
+/// \brief line size
+#define CV_LINE_SIZE 1
 #endif
 
 #if defined(AUDIO_RECO_TEST)
@@ -141,15 +203,10 @@ typedef function<void(const char *, bool)> BulezCallBack;
 #define BLUETOOTH_DISCOVERABLE_TIMEOUT 120
 #endif
 
-#if defined(DBUS_TEST)
-/// \brief dbus header
-#include <dbus/dbus.h>
-#endif
-
 /// \brief get current time stamp
 ///
 /// \return current time stamp
-static time_t getCurTimeStamp() {
+static long long getCurTimeStamp() {
 	auto ms = chrono::time_point_cast<chrono::milliseconds>(chrono::system_clock::now());
 	return ms.time_since_epoch().count();
 }
@@ -466,7 +523,7 @@ typedef enum class TaskType : int {
 }TTaskType;
 
 /// \brief task
-typedef struct tagTask {
+typedef struct tagTask : public enable_shared_from_this<tagTask> {
 	// process
 	virtual void process() = 0;
 }TTask, *PTask;
