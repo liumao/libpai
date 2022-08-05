@@ -90,20 +90,6 @@ using namespace dlib;
 #include <opencv2/highgui/highgui.hpp>
 using namespace cv;
 
-/// \brief face location
-typedef struct tagFaceLoc {
-	long m_nLeft;
-	long m_nTop;
-	unsigned long m_nWidth;
-	unsigned long m_nHeight;
-}TFaceLoc, *PFaceLoc;
-
-/// \brief face info
-typedef struct tagFaceInfo {
-	string m_strName;
-	TFaceLoc m_tFaceLoc;
-}TFaceInfo, *PFaceInfo;
-
 /// \brief face reco
 template <template <int,template<typename>class,int,typename> class block, int N, template<typename>class BN, typename SUBNET>
 using RESIDUAL = dlib::add_prev1<block<N, BN, 1, dlib::tag1<SUBNET>>>;
@@ -131,28 +117,11 @@ using ANET_TYPE = dlib::loss_metric<dlib::fc_no_bias<128,
 									dlib::relu<dlib::affine<dlib::con<32, 7, 7, 2, 2, dlib::input_rgb_image_sized<150>>>>
 									>>>>>>>>>;
 
-/// \brief set face reco type
-typedef enum class FaceRecoType : int {
-	NotSet = 0,
-	SetNotGetTarget,
-	SetAndGetTarget
-}TFaceRecoType;
-
-/// \brief face reco feature 
-typedef struct tagFaceRecoFeature {
-	tagFaceRecoFeature(const string& strName, const dlib::matrix<float, 0, 1> &tTargetFace)
-		: m_strName(strName),
-		m_tTargetFace(tTargetFace) {
-	}
-	string m_strName;
-	dlib::matrix<float, 0, 1> m_tTargetFace;
-}TFaceRecoFeature, *PFaceRecoFeature;
-
-/// \brief real face reco info
-typedef struct tagRealFaceRecoInfo {
+/// \brief real face reco
+typedef struct tagRealFaceReco {
 	Mat m_img;
-	list<TFaceInfo> m_lstFaceInfo;
-}TRealFaceRecoInfo, *PRealFaceRecoInfo;
+	std::vector<dlib::rectangle> m_vDets;
+}TRealFaceReco, *PRealFaceReco;
 
 /// \brief face vector num
 #define FACE_VECTOR_NUM 128
@@ -162,6 +131,10 @@ typedef struct tagRealFaceRecoInfo {
 #define PROCESS_FACE_TIME 20
 /// \brief line size
 #define CV_LINE_SIZE 1
+/// \brief same rect
+#define SAME_RECT 80
+/// \brief same reco
+#define SAME_RECO 0.6
 #endif
 
 #if defined(AUDIO_RECO_TEST)

@@ -55,6 +55,8 @@ int main(int argc, char* argv[]) {
 #if defined(FACE_RECO_TEST)
 	// name
 	string strName = "";
+	// input face
+	bool bInput = false;
 	
 	// detector
 	auto pFaceDetector = get_frontal_face_detector();
@@ -73,6 +75,14 @@ int main(int argc, char* argv[]) {
 	
 	// face position
 	std::vector<dlib::rectangle> dets;
+	
+	// target face info
+	std::map<dlib::matrix<float, 0, 1>, string> mTargetFaces;
+	// real face reco info
+	std::map<dlib::rectangle, string> mRealFacesDet;
+	
+	// face reco list
+	list<TRealFaceReco> lstRealFaceReco;
 	
 	// create video
 	Video video([&](AVPacket *packet) -> void {
@@ -94,13 +104,15 @@ int main(int argc, char* argv[]) {
 			auto matDis = video.resampleDisplay(pFrame);
 
 			// check num
-			if (nFaceFrame++ % 5 == 0) {
+			if (nFaceFrame++ % 10 == 0) {
 				// resample detect
 				auto matDet = video.resampleDetect(pFrame);
 	
 				// gray mat
 				Mat gray;
 				cvtColor(*matDet, gray, COLOR_RGB2GRAY);
+				// save image and detects
+				lstRealFaceReco.push_back({gray, dets});
 				
 				// image 
 				array2d<unsigned char> img;
@@ -114,16 +126,18 @@ int main(int argc, char* argv[]) {
 				cv::Rect rect((*det).left() * 2, (*det).top() * 2, (*det).width() * 2, (*det).height() * 2);
 				cv::rectangle(*matDis, rect, cv::Scalar(0, 0, 255), 1, 1, 0);
 				cv::Point origin = {(*det).left() * 2, (*det).top() * 2};
-				cv::putText(*matDis, "", origin, cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 0, 0), 2, 2, 0);
 				
-				// take 68 pointer feature
-				//full_object_detection shape = pShapePredictor(img, *det);
-				// 128 face vector
-				//dlib::matrix<dlib::rgb_pixel> faceChip;
-				//dlib::extract_image_chip(img, dlib::get_face_chip_details(shape, 150, 0.25), faceChip);
-			
-				// get 128 face vector
-				//dlib::matrix<float, 0, 1> face = pFaceRecoDNN(faceChip);
+				// find name
+				string name = "";
+				for (auto iter = mRealFacesDet.begin(); iter != mRealFacesDet.end(); iter++) {
+					// compare rect
+					if (fabs((*det).left() - iter->first.left()) < SAME_RECT && fabs((*det).top() - iter->first.top()) < SAME_RECT &&
+						fabs((*det).width() - iter->first.width()) < SAME_RECT && fabs((*det).height() - iter->first.height()) < SAME_RECT) {
+						name = iter->second;
+						break;
+					}
+				}
+				cv::putText(*matDis, name, origin, cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 0, 0), 2, 2, 0);
 			}
 			
 			// dlib show image
@@ -152,6 +166,52 @@ int main(int argc, char* argv[]) {
 	if (!video.setDetectSwsContext(320, 240, AVPixelFormat::AV_PIX_FMT_BGR24)) {
 		cout << "set detect sws context fail" << endl;
 	}
+	
+	// start process face reco thread
+	thread tFaceReco([&]() {
+		while(bRun) {
+			// check empty
+			if (lstRealFaceReco.empty()) {
+				delay(30);
+				continue;
+			}
+			auto tRealFaceReco = lstRealFaceReco.front();
+			lstRealFaceReco.pop_front();
+			
+			// image 
+			array2d<unsigned char> img;
+			dlib::assign_image(img, dlib::cv_image<unsigned char>(tRealFaceReco.m_img));
+			
+			// loop
+			for (auto det = tRealFaceReco.m_vDets.begin(); det != tRealFaceReco.m_vDets.end(); det++) {
+				// take 68 pointer feature
+				full_object_detection shape = pShapePredictor(img, *det);
+				// 128 face vector
+				dlib::matrix<dlib::rgb_pixel> faceChip;
+				dlib::extract_image_chip(img, dlib::get_face_chip_details(shape, 150, 0.25), faceChip);
+
+				// get 128 face vector
+				dlib::matrix<float, 0, 1> face = pFaceRecoDNN(faceChip);
+				
+				// save local
+				if (bInput) {
+					mTargetFaces.insert(make_pair(face, strName));
+					continue;
+				}
+				
+				// compare dnn
+				for (auto iter = mTargetFaces.begin(); iter != mTargetFaces.end(); iter++) {
+					if (length(iter->first - face) < SAME_RECO) {
+						mRealFacesDet.insert(make_pair(*det, iter->second));
+						break;
+					}
+				}
+			}
+		}
+	});
+	tFaceReco.detach();
+	
+	// start video
 	video.start();
 #endif
 
@@ -292,6 +352,9 @@ int main(int argc, char* argv[]) {
 #endif
 		} else if (input == 'i') {
 #if defined(FACE_RECO_TEST)
+			mTargetFaces.clear();
+			mRealFacesDet.clear();
+			bInput = true;
 #endif
 		} else if (input == 'n') {
 #if defined(FACE_RECO_TEST)
@@ -300,6 +363,7 @@ int main(int argc, char* argv[]) {
 #endif
 		} else if (input == 'c') {
 #if defined(FACE_RECO_TEST)
+			bInput = false;
 #endif
 		}
 		
